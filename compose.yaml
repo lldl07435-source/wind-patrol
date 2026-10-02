@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      LD_DATA_ROOT: /var/data
+      PORT: 8000
+    ports:
+      - "127.0.0.1:${APP_PORT}:8000"
+    volumes:
+      - workspace-data:/var/data
+    init: true
+    stop_grace_period: 30s
+volumes:
+  workspace-data:

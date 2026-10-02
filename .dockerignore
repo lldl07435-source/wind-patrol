@@ -1,0 +1,14 @@
+.git
+.venv
+.idea
+__pycache__
+**/__pycache__
+data
+evidence
+exports
+build
+.env
+.env.*
+*.sqlite3
+*.log
+upgrade-baseline.json

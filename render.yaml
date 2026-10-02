@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: wind-patrol
+    runtime: docker
+    plan: starter
+    numInstances: 1
+    healthCheckPath: /healthz
+    disk:
+      name: workspace-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: LD_MODE
+        value: cloud
+      - key: LD_DATA_ROOT
+        value: /var/data
+      - key: LD_SECRET_KEY
+        sync: false
+      - key: LD_ALLOWED_HOSTS
+        sync: false
+      - key: LD_CSRF_ORIGINS
+        sync: false
+      - key: LD_TRUST_PROXY
+        value: "1"

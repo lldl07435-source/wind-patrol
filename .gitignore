@@ -1,0 +1,30 @@
+# Python and local tools
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+
+# Databases, runtime output and local evidence
+data/
+运行结果/
+测试结果/
+evidence/
+exports/
+发布包/
+*.sqlite3*
+*.log
+*.bundle
+upgrade-baseline.json
+
+# Local configuration and signing material
+.env
+.env.*
+!.env.example
+.portal-secret
+.portal.lock
+*.pem
+*.key
+Thumbs.db
+.DS_Store

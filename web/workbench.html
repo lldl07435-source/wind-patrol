@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>巡检业务工作台 V1.1.1</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/workbench.css" />
+    <script src="/workbench.js" defer></script>
+  <link rel="stylesheet" href="/account.css"><script src="/session.js" defer></script></head>
+  <body>
+    <aside>
+      <div class="brand">
+        <span class="brand-mark">巡</span>
+        <div>多风巡检系统<small>本地业务工作台 · V1.1.1</small></div>
+      </div>
+      <div class="nav-label">工作空间</div>
+      <nav aria-label="业务导航">
+        <button data-view="history" class="selected">
+          01　任务档案<span>持久保存与证据下载</span>
+        </button>
+        <button data-view="workflow">
+          02　缺陷与工单<span>资产关联与处理留痕</span>
+        </button>
+        <button data-view="comparison">
+          03　策略实验<span>固定条件配对复算</span>
+        </button>
+      </nav>
+      <div class="aside-bottom">
+        <a href="/">打开仿真控制台 ↗</a
+        ><a href="/engineering.html">打开分类记录台 ↗</a>
+        <p>仿真与人工业务记录<br />不连接现场飞控设备</p>
+      </div>
+    </aside>
+    <main>
+      <header>
+        <span>电力自主巡检 / 业务工作台</span
+        ><button id="refresh" class="quiet">刷新数据</button>
+      </header>
+      <div id="notice" role="status" aria-live="polite"></div>
+      <section id="history" class="view">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">任务证据</div>
+            <h1>每次仿真，都有据可查</h1>
+            <p>
+              任务自动写入本地数据库。使用相同数据目录重启服务后，可继续查看与下载。
+            </p>
+          </div>
+          <a class="primary link-button" href="/">新建仿真任务 ↗</a>
+        </div>
+        <div id="history-stats" class="stats"></div>
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>任务档案</h2>
+            <label
+              >筛选任务
+              <input
+                id="history-filter"
+                type="search"
+                placeholder="输入名称或编号"
+            /></label>
+          </div>
+          <p class="hint">
+            下载包含任务标识、配置、汇总、事件、完整轨迹与指标。时间按 UTC
+            显示。
+          </p>
+          <div id="history-table" class="table-wrap"></div>
+        </div>
+        <div class="scope">
+          备份前先停止本地服务，再复制整个运行结果目录。旧版本未导出的内存任务无法由本版恢复。
+        </div>
+      </section>
+      <section id="workflow" class="view" hidden>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">缺陷处理</div>
+            <h1>从发现到复核，保留处理依据</h1>
+            <p>
+              将人工发现的问题关联到资产与仿真任务。每次状态变化都需要填写原因。
+            </p>
+          </div>
+        </div>
+        <div id="workflow-stats" class="stats"></div>
+        <div class="two-columns">
+          <form id="asset-form" class="panel">
+            <h2>登记资产</h2>
+            <label
+              >资产编号<input
+                name="code"
+                required
+                maxlength="40"
+                placeholder="如 T017-INS01" /></label
+            ><label
+              >资产名称<input
+                name="name"
+                required
+                maxlength="80"
+                placeholder="如 017号杆塔绝缘子" /></label
+            ><label
+              >位置说明<input
+                name="location"
+                required
+                maxlength="120"
+                placeholder="线路区段及部件位置" /></label
+            ><button class="primary" type="submit">保存资产</button>
+          </form>
+          <form id="defect-form" class="panel">
+            <h2>登记待复核缺陷</h2>
+            <div class="form-grid">
+              <label
+                >关联资产<select
+                  name="asset_id"
+                  id="asset-select"
+                  required
+                ></select></label
+              ><label
+                >关联仿真任务<select
+                  name="task_id"
+                  id="task-select"
+                  required
+                ></select
+              ></label>
+            </div>
+            <label
+              >问题名称<input
+                name="title"
+                required
+                maxlength="120"
+                placeholder="描述需要核查的具体问题"
+            /></label>
+            <div class="form-grid">
+              <label
+                >人工等级<select name="severity">
+                  <option value="medium">中</option>
+                  <option value="low">低</option>
+                  <option value="high">高</option>
+                </select></label
+              ><label
+                >发现依据<input
+                  name="reason"
+                  required
+                  maxlength="1000"
+                  placeholder="来源、现象与核查范围"
+              /></label>
+            </div>
+            <button class="primary" type="submit">提交复核记录</button>
+          </form>
+        </div>
+        <div class="panel">
+          <div class="panel-heading">
+            <h2>缺陷与工单</h2>
+            <span class="hint">待复核 → 已确认 → 处理中 → 待验收 → 已关闭</span>
+          </div>
+          <div id="defect-table" class="table-wrap"></div>
+        </div>
+        <div class="panel">
+          <h2>处理轨迹</h2>
+          <p class="hint">
+            操作留痕来自本地事务记录，不是实名签章或不可篡改存证。
+          </p>
+          <div id="events" class="timeline"></div>
+        </div>
+      </section>
+      <section id="comparison" class="view" hidden>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">可重复实验</div>
+            <h1>用相同风况，检验策略差异</h1>
+            <p>
+              成对运行基线与自适应控制。仅切换风前馈补偿及动态限速，其余参数保持一致。
+            </p>
+          </div>
+        </div>
+        <div class="two-columns experiment-layout">
+          <form id="compare-form" class="panel">
+            <h2>实验配置</h2>
+            <label
+              >预置场景<select id="scenario-select" required></select
+            ></label>
+            <p id="scenario-description" class="hint"></p>
+            <label
+              >随机种子<input
+                id="seeds"
+                value="42,43,44"
+                required
+                placeholder="最多五个，以逗号分隔"
+            /></label>
+            <details>
+              <summary>查看完整场景配置</summary>
+              <pre id="config-preview"></pre>
+            </details>
+            <button class="primary" type="submit">运行配对实验</button>
+            <p class="hint">
+              最多四万仿真步。计算期间不能同时启动其他仿真；结果与两组任务共同保存。
+            </p>
+          </form>
+          <div class="panel">
+            <h2>实验解读</h2>
+            <p>
+              先核对完成状态，再解释时长与路径长度。提前中止的短轨迹不代表控制性能更好。
+            </p>
+            <p>
+              “平均目标距离”是到当前航点的距离，不是横向跟踪误差。没有运动采样时显示“无数据”。
+            </p>
+            <p>
+              随机风场在共同时间范围内一致；不同策略可能在不同时间结束。这里不输出预设的提升百分比。
+            </p>
+            <div class="scope">
+              所有结果来自软件模型，不能用于声明真实无人机抗风等级或现场巡检精度。
+            </div>
+          </div>
+        </div>
+        <div id="comparison-results"></div>
+      </section>
+      <footer>面向多风环境的具身智能无人机电力自主巡检系统软件　V1.1.1</footer>
+    </main>
+    <dialog id="transition-dialog">
+      <form id="transition-form">
+        <h2 id="transition-title">处理记录</h2>
+        <p id="transition-context"></p>
+        <label
+          >处理依据<textarea
+            id="transition-reason"
+            required
+            maxlength="1000"
+            rows="4"
+            placeholder="填写复核结论、处理情况或退回原因"
+          ></textarea>
+        </label>
+        <div class="dialog-actions">
+          <button id="cancel-transition" type="button">取消</button
+          ><button class="primary" type="submit">确认提交</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>

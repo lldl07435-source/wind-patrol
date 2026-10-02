@@ -1,0 +1,11 @@
+# 将两个域名换成你已解析到服务器的真实域名。
+flex.example.com {
+    reverse_proxy 127.0.0.1:8876 {
+        header_up X-Real-IP {remote_host}
+    }
+}
+patrol.example.com {
+    reverse_proxy 127.0.0.1:8765 {
+        header_up X-Real-IP {remote_host}
+    }
+}

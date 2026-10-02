@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>多风具身巡检系统 V1.1.1</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" defer></script>
+  <link rel="stylesheet" href="/account.css"><script src="/session.js" defer></script></head>
+  <body>
+    <aside>
+      <div class="brand"><i>W</i><div>风巡智航<span>WIND-SAFE INSPECTION · V1.1.1</span></div></div>
+      <nav aria-label="功能导航">
+        <button data-page="overview" class="active">01　任务态势</button>
+        <button data-page="wind">02　风场感知</button>
+        <button data-page="scene">03　策略配置</button>
+        <button data-page="route">04　航线规划</button>
+        <button data-page="flight">05　轨迹回放</button>
+        <button data-page="sensor">06　观测与控制</button>
+        <button data-page="nodes">07　具身智能闭环</button>
+        <button data-page="events">08　安全事件</button>
+        <button data-page="compare">09　任务对比</button>
+        <button data-page="reports">10　结果归档</button>
+        <button data-page="help">11　使用帮助</button>
+        <a class="engineering-entry" href="/engineering.html">12　工程工作台</a>
+        <a class="engineering-entry" href="/workbench.html">13　业务与实验工作台</a>
+      </nav>
+      <div class="scope">
+        多风环境数字验证台<br />本地闭环仿真<br />不替代真实飞行试验
+      </div>
+    </aside>
+    <main>
+      <header>
+        <div>
+          <div id="software" class="software"></div>
+          <h1 id="page-title">任务总览</h1>
+        </div>
+        <div class="header-status"><span class="online">● 感知链路在线</span><span id="clock"></span></div>
+      </header>
+      <div class="toolbar">
+        <label
+          >当前任务 <input id="task-name" value="标准航点巡检" maxlength="80"
+        /></label>
+        <button id="validate">校验配置</button>
+        <button id="run" class="primary">运行仿真</button>
+        <span id="run-state">尚未运行</span>
+      </div>
+      <div id="notice" role="status" aria-live="polite">正在连接本地服务……</div>
+      <section id="overview" class="page active">
+        <div class="intro">
+          <h2>多风环境自主巡检任务态势</h2>
+          <p>
+            从风场感知到安全执行形成可追溯闭环；选择典型风况后运行仿真，所有页面共享同一任务证据链。
+          </p>
+        </div>
+        <div id="summary-cards" class="cards"></div>
+        <div class="columns">
+          <article>
+            <h2>内置场景</h2>
+            <div id="scenario-cards" class="scenario-grid"></div>
+          </article>
+          <article>
+            <h2>最近任务</h2>
+            <div id="recent-tasks"></div>
+            <p class="muted">
+              任务自动保存到当前账户，服务重启后仍可读取。
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="wind" class="page">
+        <div class="wind-hero">
+          <div>
+            <span class="eyebrow">EMBODIED WIND AWARENESS</span>
+            <h2>风场感知与风险分级</h2>
+            <p>融合持续风、周期阵风与随机紊流，实时输出风况标签、估计误差和安全阈值余量。</p>
+          </div>
+          <div id="wind-badge" class="wind-badge">待运行</div>
+        </div>
+        <div id="wind-cards" class="cards"></div>
+        <div class="columns wind-columns">
+          <article>
+            <div class="section-head"><h2>实际风速与估计风速</h2><span class="legend">m/s</span></div>
+            <canvas id="wind-chart" width="900" height="360"></canvas>
+            <p class="legend">青色 实际风速　橙色 估计风速　虚线 安全阈值</p>
+          </article>
+          <article>
+            <h2>当前具身策略</h2>
+            <div id="wind-strategy"></div>
+            <div class="risk-scale" aria-label="风况风险等级">
+              <span>平稳</span><span>持续风</span><span>阵风</span><span>紊流</span><span>超限</span>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section id="scene" class="page">
+        <div class="section-head">
+          <h2>仿真参数</h2>
+          <div>
+            <button id="import-config">导入JSON</button
+            ><button id="download-config">下载配置</button
+            ><button id="reset-config">恢复默认</button>
+          </div>
+        </div>
+        <p>
+          长度单位为米，时间单位为秒。风速为东、北、上三个分量。修改配置不会改变已完成任务。
+        </p>
+        <div id="parameter-groups"></div>
+        <article>
+          <h2>配置原文</h2>
+          <p>
+            高级编辑会覆盖表单配置；请先应用JSON，再校验。未知字段和不合法数值会被拒绝。
+          </p>
+          <textarea
+            id="json-config"
+            spellcheck="false"
+            aria-label="配置JSON"
+          ></textarea
+          ><button id="apply-json">应用JSON</button>
+        </article>
+        <input
+          type="file"
+          id="config-file"
+          accept=".json,application/json"
+          hidden
+        />
+      </section>
+      <section id="route" class="page">
+        <div class="columns route-columns">
+          <article>
+            <div class="section-head">
+              <h2>巡检航点</h2>
+              <button id="add-waypoint">新增航点</button>
+            </div>
+            <p>依表格顺序飞行。原点为起降点，巡检航点高度至少1米。</p>
+            <div id="waypoint-table"></div>
+            <div class="section-head">
+              <h2>球形障碍物</h2>
+              <button id="add-obstacle">新增障碍物</button>
+            </div>
+            <p>障碍物用于局部斥力和碰撞检测，不表示已经生成安全绕行路线。</p>
+            <div id="obstacle-table"></div>
+          </article>
+          <article>
+            <h2>航线俯视预览</h2>
+            <canvas
+              id="route-canvas"
+              width="760"
+              height="590"
+              aria-label="航线俯视预览"
+            ></canvas>
+            <p class="legend">
+              蓝色虚线 航点连接　橙色圆 障碍投影　黑色点 起降点
+            </p>
+          </article>
+        </div>
+      </section>
+      <section id="flight" class="page">
+        <div class="section-head">
+          <h2>已完成结果的轨迹回放</h2>
+          <div>
+            <select id="projection" aria-label="投影方向">
+              <option value="xy">俯视 XY</option>
+              <option value="xz">侧视 XZ</option>
+              <option value="yz">侧视 YZ</option></select
+            ><button id="play">播放回放</button>
+          </div>
+        </div>
+        <p>
+          回放使用计算完成后的采样记录，不是实时飞控。可拖动进度定位某一时刻。
+        </p>
+        <div class="columns route-columns">
+          <article>
+            <canvas
+              id="flight-canvas"
+              width="900"
+              height="560"
+              aria-label="实际仿真轨迹"
+            ></canvas>
+            <input
+              id="timeline"
+              type="range"
+              min="0"
+              max="0"
+              value="0"
+              aria-label="回放位置"
+            />
+            <div id="frame-label"></div>
+          </article>
+          <article>
+            <h2>当前采样状态</h2>
+            <div id="frame-detail"></div>
+            <h2>任务结束判定</h2>
+            <div id="flight-summary"></div>
+          </article>
+        </div>
+      </section>
+      <section id="sensor" class="page">
+        <p>
+          图表取自实际仿真采样。目标距离是到当前目标点的距离，不是相对整条参考航线的横向误差。
+        </p>
+        <div id="sensor-cards" class="cards"></div>
+        <div class="columns">
+          <article>
+            <h2>速度与高度</h2>
+            <canvas id="motion-chart" width="760" height="310"></canvas>
+            <p class="legend">蓝色 速度 m/s　橙色 高度 m</p>
+          </article>
+          <article>
+            <h2>目标距离</h2>
+            <canvas id="distance-chart" width="760" height="310"></canvas>
+            <p>航点切换时目标距离可能跳变。</p>
+          </article>
+        </div>
+        <article>
+          <h2>观测有效性与指令更新</h2>
+          <canvas id="sensor-chart" width="1200" height="235"></canvas>
+          <p class="legend">蓝色 观测有效　橙色 指令更新　1 为是，0 为否</p>
+        </article>
+      </section>
+      <section id="nodes" class="page">
+        <p>
+            感知、决策、飞控是虚拟闭环节点。服务时长分别为6、3、1毫秒；统计用于验证链路时序，不代表真实硬件性能。
+        </p>
+        <div id="node-cards" class="cards"></div>
+        <div class="pipeline">
+          <span>风场与位置观测</span><b>→</b><span>感知层<br />融合估计 6 ms</span
+          ><b>→</b><span>决策层<br />策略计算 3 ms</span><b>→</b
+          ><span>执行层<br />控制下发 1 ms</span>
+        </div>
+        <div class="columns">
+          <article>
+            <h2>节点任务次数</h2>
+            <div id="node-table"></div>
+          </article>
+          <article>
+            <h2>端到端虚拟时延</h2>
+            <canvas id="latency-chart" width="760" height="300"></canvas>
+          </article>
+        </div>
+        <article>
+          <h2>统计口径</h2>
+          <p>
+            观测中断时跳过GPU任务；CPU和FCU仍参与该步调度。完成时间按节点可用时间和前序任务完成时间计算。虚拟时延只作为统计输出，不延后动力学更新，也不调用显卡设备。
+          </p>
+        </article>
+      </section>
+      <section id="events" class="page">
+        <div class="section-head">
+          <h2>任务状态与告警</h2>
+          <select id="event-filter" aria-label="事件筛选">
+            <option value="all">全部事件</option>
+            <option value="WAYPOINT">航点完成</option>
+            <option value="RETURN">返航</option>
+            <option value="ABORTED">异常中止</option>
+            <option value="TIMEOUT">时长上限</option>
+          </select>
+        </div>
+        <p>
+          DONE表示降落完成，只有巡检完成字段为“是”时才表示全部航点已经完成。低电量提前返航也可能以DONE结束。
+        </p>
+        <div id="event-table"></div>
+        <article>
+          <h2>状态转换说明</h2>
+          <div class="pipeline">
+            <span>PATROL 巡检</span><b>→</b><span>RETURN 返航</span><b>→</b
+            ><span>LAND 降落</span><b>→</b><span>DONE 完成降落</span>
+          </div>
+          <p>
+            电量临界、观测超时、围栏越界或碰撞触发ABORTED；时间耗尽且未结束时记录TIMEOUT。
+          </p>
+        </article>
+      </section>
+      <section id="compare" class="page">
+        <div class="section-head">
+          <h2>已保存任务对比</h2>
+          <button id="refresh-tasks">刷新任务</button>
+        </div>
+        <p>
+          先运行不同场景，再比较结束状态、完成航点、电量与虚拟时延。不同配置的结果不能直接解释为算法优劣。
+        </p>
+        <div id="compare-table"></div>
+      </section>
+      <section id="reports" class="page">
+        <h2>保存当前任务</h2>
+        <p>
+          下载ZIP由浏览器保存到下载位置；写入结果目录会在软件包的“运行结果”中创建新文件夹，不覆盖已有文件。
+        </p>
+        <div class="actions">
+          <button id="download-result" class="primary">下载结果ZIP</button
+          ><button id="export-result">写入结果目录</button>
+        </div>
+        <div id="export-location"></div>
+        <article>
+          <h2>输出文件</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>文件</th>
+                <th>内容与使用方式</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>config.json</td>
+                <td>完整运行配置，可重新导入复现</td>
+              </tr>
+              <tr>
+                <td>summary.json</td>
+                <td>任务状态、航点、电量和节点统计</td>
+              </tr>
+              <tr>
+                <td>events.json</td>
+                <td>按仿真时间排列的状态转换与事件</td>
+              </tr>
+              <tr>
+                <td>trajectory.csv</td>
+                <td>全部采样，可用表格软件或Python分析</td>
+              </tr>
+              <tr>
+                <td>metrics.json</td>
+                <td>轨迹长度、观测比例和分位数指标</td>
+              </tr>
+              <tr>
+                <td>report.html</td>
+                <td>本地摘要与水平轨迹报告，仅写入目录时生成</td>
+              </tr>
+              <tr>
+                <td>task.json</td>
+                <td>任务编号、名称与创建时间，目录及ZIP均包含</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+        <article>
+          <h2>当前摘要原文</h2>
+          <pre id="summary-json"></pre>
+        </article>
+      </section>
+      <section id="help" class="page">
+        <article>
+          <h2>启动与关闭</h2>
+          <p>
+            在PyCharm中打开源代码目录，使用Python
+            3.10或以上版本运行app.py。浏览器自动打开本地页面；也可手动访问http://127.0.0.1:8765。关闭浏览器不会停止服务，需在PyCharm点击停止或在终端按Ctrl+C。
+          </p>
+          <h2>标准操作顺序</h2>
+          <ol>
+            <li>在任务总览选择内置场景，或到场景配置导入JSON。</li>
+            <li>检查航点顺序、风速、电量与安全阈值，点击校验配置。</li>
+            <li>点击运行仿真，等待显示计算完成。</li>
+            <li>在轨迹回放、观测与控制、虚拟异构节点查看结果。</li>
+            <li>查看事件记录确认终止原因，最后下载或写入结果。</li>
+          </ol>
+          <h2>模型边界</h2>
+          <p>
+            软件采用三维质点平移动力学、固定增益状态估计和PID位置控制。具身智能对应观测、决策、运动和反馈闭环；异构计算对应虚拟节点调度。未实现深度学习视觉识别、真实GPU加速、旋翼姿态模型或实地飞行控制。
+          </p>
+          <h2>常见问题</h2>
+          <p>
+            端口被占用：运行app.py --port
+            8766。配置不合法：根据提示检查数值和航点。画面没有轨迹：先运行仿真；零电量场景没有运动采样属于正常中止结果。历史任务缺失：检查启动时是否使用了相同的输出目录；旧版本未导出的内存任务无法恢复。
+          </p>
+          <h2>隐私与网络</h2>
+          <p>
+            服务仅监听127.0.0.1，静态页面不引用外部字体或脚本。界面不设置账号密码，也不提供远程访问。请勿将端口转发到公网。
+          </p>
+        </article>
+      </section>
+    </main>
+    <dialog id="edit-dialog">
+      <form id="edit-form">
+        <h2 id="edit-title"></h2>
+        <div id="edit-fields"></div>
+        <div class="actions">
+          <button type="button" id="cancel-edit">取消</button
+          ><button type="submit" class="primary">保存</button>
+        </div>
+      </form>
+    </dialog>
+  </body>
+</html>
