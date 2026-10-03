@@ -839,6 +839,8 @@ async function runTask() {
       return;
     }
     state.result = result;
+    await openClassicTwin(result.id);
+    showPage('flight');
     state.frame = Math.max(0, state.result.samples.length - 1);
     $("event-filter").value = "all";
     $("export-location").textContent = "";
@@ -1003,3 +1005,14 @@ async function boot() {
 }
 
 action(boot)();
+
+let ldClassicTwin,ldClassicTwinPoll;
+async function openClassicTwin(runId){
+  let host=document.getElementById('classic-twin');
+  if(!host){host=document.createElement('section');host.id='classic-twin';const parent=document.getElementById('wind'==='ld'?'live':'flight');parent.prepend(host);}
+  const {TwinPlayer}=await import('/twin-viewer.js');
+  ldClassicTwin?.dispose();clearInterval(ldClassicTwinPoll);ldClassicTwin=new TwinPlayer(host,{domain:'wind'});
+  if(runId)await ldClassicTwin.load(runId);else{await ldClassicTwin.live();ldClassicTwinPoll=setInterval(()=>ldClassicTwin.live(),160);}
+  host.scrollIntoView({block:'start',behavior:'smooth'});
+}
+window.addEventListener('pagehide',()=>{ldClassicTwin?.dispose();clearInterval(ldClassicTwinPoll);});

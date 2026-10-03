@@ -15,11 +15,11 @@ from comparison import compare
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DATA_ROOT = ROOT.parent / '运行结果' if ROOT.name == '源代码' else ROOT / 'data'
 WEB_ROOT = ROOT / 'web'
-VERSION = '1.3.0'
+VERSION = '1.4.0'
 DEFAULT_PORT = 8765
 COOKIE_NAME = 'windpatrol_session'
 TITLE = '风巡智航 多风环境无人机巡检系统'
-STATIC_FILES = {'studio.html', 'studio.css', 'studio.js', 'lucide.js', 'lab.html', 'lab.css', 'lab.js', 'index.html', 'app.js', 'style.css', 'engineering.html', 'engineering.js',
+STATIC_FILES = {'three.module.js', 'three.core.js', 'twin-orbit.js', 'twin-models.js', 'twin-timeline.js', 'twin-viewer.js', 'twin.css', 'twin.html', 'twin-entry.js', 'studio.html', 'studio.css', 'studio.js', 'lucide.js', 'lab.html', 'lab.css', 'lab.js', 'index.html', 'app.js', 'style.css', 'engineering.html', 'engineering.js',
                 'workbench.html', 'workbench.js', 'workbench.css'}
 WEB_STEPS = 20000
 LEGACY_NAMES = ('tasks.sqlite3', 'engineering.sqlite3', '运行日志.log')
@@ -38,10 +38,12 @@ class Context:
         self.engineering = EngineeringStore(root)
         self.workflow = Workflow(root, self.repo)
         self.lock = threading.Lock()
+        self.manual = None
     def busy(self):
         return self.lock.locked()
     def close(self):
-        pass
+        if self.manual and not self.manual.done.is_set():
+            self.manual.stop()
     def record_count(self):
         with self.repo.connect() as db:
             return db.execute('SELECT COUNT(*) FROM tasks').fetchone()[0]
@@ -66,6 +68,12 @@ def release_user(user):
 def handle(request, route, raw):
     from portal import data
     ctx = data.context(request.user)
+    if route.startswith('manual/'):
+        from portal.manual_api import handle as manual_handle
+        return manual_handle(request, ctx, 'wind', route, raw)
+    if route.startswith('twin/'):
+        from portal.twin import handle as twin_handle
+        return twin_handle(request, ctx, 'wind', route, raw)
     if route.startswith('studio/'):
         from portal.studio_api import handle as studio_handle
         return studio_handle(request, ctx, 'wind', route, raw)
@@ -127,7 +135,11 @@ def handle(request, route, raw):
             name = raw.get('name', '')
             if not isinstance(name, str) or not 1 <= len(name.strip()) <= 80:
                 raise ValueError('任务名称应为1至80个字符')
-            return public_result(ctx.repo.add(name, run_simulation(cfg)))
+            from portal.manual_api import PROFILES
+            visual_profile=raw.get('visual_profile','inspection')
+            if visual_profile not in PROFILES: raise ValueError('机型模型无效')
+            result=run_simulation(cfg);result['summary']['visual_profile']=visual_profile
+            return public_result(ctx.repo.add(name,result))
         finally:
             data.compute_slots.release()
             ctx.lock.release()

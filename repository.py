@@ -110,7 +110,8 @@ class Repository:
                        'command_emitted', 'virtual_latency', 'wind_x',
                        'wind_y', 'wind_z', 'wind_speed',
                        'wind_estimate_speed', 'wind_regime', 'gust_factor']
-            writer = csv.DictWriter(stream, fieldnames=columns)
+            if result['samples'] and 'manual_axes' in result['samples'][0]:columns += ['heading_rad','manual_axes']
+            writer = csv.DictWriter(stream, fieldnames=columns, extrasaction="ignore")
             writer.writeheader()
             writer.writerows(result['samples'])
             archive.writestr('trajectory.csv', stream.getvalue().encode('utf-8-sig'))

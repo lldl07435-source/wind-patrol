@@ -22,4 +22,8 @@ jobs:
       - run: python tests/场景回归记录.py
       - run: python manage.py check
       - run: python manage.py makemigrations --check --dry-run
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tools/verify_twin_timeline.mjs
       - run: python manage.py test portal

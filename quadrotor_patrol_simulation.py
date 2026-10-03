@@ -440,7 +440,8 @@ def write_report(result: dict, directory: Path):
                "wind_z", "wind_speed", "wind_estimate_speed",
                "wind_regime", "gust_factor"]
     with (directory / "trajectory.csv").open("w", newline="", encoding="utf-8-sig") as stream:
-        writer = csv.DictWriter(stream, fieldnames=columns)
+        if result['samples'] and 'manual_axes' in result['samples'][0]:columns += ['heading_rad','manual_axes']
+        writer = csv.DictWriter(stream, fieldnames=columns, extrasaction="ignore")
         writer.writeheader()
         writer.writerows(result["samples"])
     # 对摘要文本进行HTML 转义，报告不加载外部脚本。

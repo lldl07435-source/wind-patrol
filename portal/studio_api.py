@@ -30,10 +30,12 @@ def config(raw, domain):
         return asdict(cfg)
     from ldcell.simulation import SCENARIOS
     from ldcell.scheduling import POLICIES
-    if set(raw) - {'seed', 'count', 'policy', 'scenario', 'speed'}:
+    if set(raw) - {'seed', 'count', 'policy', 'scenario', 'speed', 'task_kind'}:
         raise ValueError('分拣参数包含未支持的字段')
     result = dict(seed=42, count=24, policy='BEAM', scenario='normal', speed=5)
     result.update(raw)
+    if 'task_kind' in result and result['task_kind'] not in ('belt','color','size','weight','barcode','rework'):
+        raise ValueError('分拣任务类型不正确')
     if type(result['seed']) is not int or not 0 <= result['seed'] <= 2**32 - 1:
         raise ValueError('随机种子应为0至4294967295的整数')
     if type(result['count']) is not int or not 4 <= result['count'] <= 80:
