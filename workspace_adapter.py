@@ -15,11 +15,11 @@ from comparison import compare
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DATA_ROOT = ROOT.parent / '运行结果' if ROOT.name == '源代码' else ROOT / 'data'
 WEB_ROOT = ROOT / 'web'
-VERSION = '1.1.1'
+VERSION = '1.2.0'
 DEFAULT_PORT = 8765
 COOKIE_NAME = 'windpatrol_session'
 TITLE = '风巡智航 多风环境无人机巡检系统'
-STATIC_FILES = {'index.html', 'app.js', 'style.css', 'engineering.html', 'engineering.js',
+STATIC_FILES = {'lab.html', 'lab.css', 'lab.js', 'index.html', 'app.js', 'style.css', 'engineering.html', 'engineering.js',
                 'workbench.html', 'workbench.js', 'workbench.css'}
 WEB_STEPS = 20000
 LEGACY_NAMES = ('tasks.sqlite3', 'engineering.sqlite3', '运行日志.log')
@@ -66,6 +66,9 @@ def release_user(user):
 def handle(request, route, raw):
     from portal import data
     ctx = data.context(request.user)
+    if route.startswith('lab/'):
+        from portal.lab_api import handle as lab_handle
+        return lab_handle(request, ctx, 'wind', route, raw)
     if request.method == 'GET':
         if route == 'bootstrap':
             return {'software': SOFTWARE_NAME, 'version': VERSION, 'token': get_token(request),

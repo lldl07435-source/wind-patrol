@@ -646,3 +646,5 @@ dialog::backdrop {
 .saved-risk-list { display: grid; gap: 16px; padding: 18px; }
 .saved-risk-list > div { display: grid; grid-template-columns: minmax(120px,1fr) 2fr 50px; gap: 16px; align-items: center; }
 .saved-risk-list meter { width: 100%; height: 18px; }
+
+.lab-entry-banner{display:flex;align-items:center;gap:20px;margin:24px 32px 0;padding:18px 22px;background:#123444;border:1px solid #277586;border-radius:10px;color:#d9f4fa}.lab-entry-banner span{color:#8fb7c7;font-size:13px}.lab-entry-banner a{margin-left:auto;padding:10px 14px;color:#063344;background:#65d9d0;border-radius:7px;text-decoration:none;font-weight:700}@media(max-width:800px){.lab-entry-banner{margin:14px;flex-wrap:wrap;gap:10px}.lab-entry-banner a{margin-left:0}}
