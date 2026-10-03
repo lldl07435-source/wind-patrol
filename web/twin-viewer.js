@@ -1,7 +1,7 @@
 import * as T from './three.module.js';
 import {OrbitControls} from './twin-orbit.js';
 import {aircraft,sorterScenes,makeConveyor,makeFlight,disposeScene} from './twin-models.js';
-import {normalizeReplay,mergeFrames,atTime,clamp,stateNames} from './twin-timeline.js';
+import {normalizeReplay,mergeFrames,atTime,clamp,stateNames,sorterPosition} from './twin-timeline.js';
 
 const text=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fixed=(n,d=2)=>Number.isFinite(n)?n.toFixed(d):'—';

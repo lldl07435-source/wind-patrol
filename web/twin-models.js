@@ -71,7 +71,7 @@ export function makeConveyor(scene,sceneId='belt'){
   label(g,'LD-FLEX · VIRTUAL SORTING LINE',[-.5,2.8,0],{scale:3,color:'#83d9ca'});
   const parcel=new T.Group();g.add(parcel);const carton=box(parcel,[.3,.24,.27],material(0xdca25a,.05,.84),[0,.12,0]);box(parcel,[.044,.006,.28],material(0xc9a978),[0,.244,0]);box(parcel,[.11,.008,.1],material(0xf3eee0),[.075,.248,0]);
   const stack=new T.Group();g.add(stack);let stackKey='';
-  return {group:g,extent:7,target:new T.Vector3(0,1,0),home:[7,5.4,7.5],tracked:new T.Vector3(),
+  return {group:g,extent:7,target:new T.Vector3(0,1,0),home:[6,4.2,6.2],tracked:new T.Vector3(),
     update(f,time){
       gate.position.y=1.35+(f?.gate?.45:0);selector.rotation.y=f?.route===1?-.38:.38;
       const beltTravel=(f?.progress||0)*5;beltLines.position.x=beltTravel% .16;
