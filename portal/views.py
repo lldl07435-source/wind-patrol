@@ -65,7 +65,7 @@ def limited(request, action, maximum, seconds, subject=''):
 def profile(request):
     user = request.user
     return {'user': {'username': user.username, 'display_name': user.first_name or user.username,
-                     'operator': user.is_staff} if user.is_authenticated else None,
+                     'operator': user.is_staff, 'email': user.email} if user.is_authenticated else None,
             'csrf': get_token(request), 'software': adapter.TITLE, 'version': adapter.VERSION,
             'mode': settings.DEPLOYMENT_MODE, 'registration': True}
 
@@ -119,6 +119,17 @@ def accounts(request, operation=''):
             adapter.release_user(request.user)
             audit(request.user, 'logout')
             logout(request)
+            return respond(profile(request))
+        if operation == 'profile':
+            display, email = raw.get('display_name', ''), raw.get('email', '')
+            if not isinstance(display, str) or not 1 <= len(display.strip()) <= 40 or not isinstance(email, str) or len(email) > 254:
+                raise ValueError('显示名称或邮箱格式不正确')
+            if email:
+                validate_email(email)
+            request.user.first_name = display.strip()
+            request.user.email = email.strip()
+            request.user.save(update_fields=['first_name', 'email'])
+            audit(request.user, 'profile_updated')
             return respond(profile(request))
         if operation == 'password':
             current, new = raw.get('current_password', ''), raw.get('new_password', '')
@@ -193,7 +204,7 @@ def api(request, route):
         return respond({'error': '操作未完成，请检查服务运行日志'}, 500)
 
 def page(request, name=''):
-    filename = name or 'index.html'
+    filename = 'index.html' if name == 'classic.html' else name or 'studio.html'
     allowed = {'login.html', 'account.css', 'account.js', 'data.html', 'session.js'} | set(adapter.STATIC_FILES)
     if filename == 'favicon.ico':
         return HttpResponse(status=204)
